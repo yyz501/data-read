@@ -6,10 +6,12 @@ public abstract class MainMenu {
     public MainMenu() {
         this.scanner = new Scanner(System.in);
     }
-
-    public abstract void showMenu();
-
     public void close() {
         scanner.close();
     }
+
+    public abstract void showMenu();
+
+    public abstract void showMenu(int parameter);
 }
+

@@ -1,17 +1,23 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class ConcertManager implements DataManager<Concert> {
-    private List<Concert> concerts = new ArrayList<>();
+public class ConcertManager implements DataManager<List<Concert>> {
+    private Map<Integer, Concert> concerts = new HashMap<>();
 
     @Override
-    public void loadData(String filePath) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    public void loadData(String concertFilePath) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(concertFilePath));
         String line;
         while ((line = reader.readLine()) != null) {
-            String[] data = line.split(",");
-            if (data.length == 8) {
+            try {
+                String[] data = line.split(",");
+                if (data.length != 8) {
+                    System.out.println("Skipping malformed line: " + line);
+                    continue;
+                }
                 int concertId = Integer.parseInt(data[0].trim());
                 String date = data[1].trim();
                 String timing = data[2].trim();
@@ -20,7 +26,9 @@ public class ConcertManager implements DataManager<Concert> {
                 PriceInfo standing = parsePriceInfo(data[5].trim());
                 PriceInfo seating = parsePriceInfo(data[6].trim());
                 PriceInfo vip = parsePriceInfo(data[7].trim());
-                concerts.add(new Concert(concertId, date, timing, artistName, venueName, standing, seating, vip));
+                concerts.put(concertId, new Concert(concertId, date, timing, artistName, venueName, standing, seating, vip));
+            } catch (NumberFormatException e) {
+                System.out.println("Error parsing line: " + line + "; Error: " + e.getMessage());
             }
         }
         reader.close();
@@ -31,21 +39,10 @@ public class ConcertManager implements DataManager<Concert> {
         return new PriceInfo(Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
     }
 
-    @Override
-    public void saveData(String filePath) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
-        for (Concert concert : concerts) {
-            String line = String.format("%-5s%-15s%-15s%-15s%-30s%-15s%-15s%-15s%n",
-                    concert.getId(), concert.getDate(), concert.getTiming(), concert.getArtistName(), concert.getVenueName(),
-                    concert.getStanding().formatForCsv(), concert.getSeating().formatForCsv(), concert.getVip().formatForCsv());
-            writer.write(line);
-            writer.newLine();
-        }
-        writer.close();
-    }
+
     @Override
     public List<Concert> getAllRecords() {
-        return new ArrayList<>(concerts); // 返回演唱会列表的一个副本
+        return new ArrayList<>(concerts.values());
     }
 }
 
@@ -135,6 +132,15 @@ class Concert {
     public void setVip(PriceInfo vip) {
         this.vip = vip;
     }
+
+    public int getBookedSeats() {
+
+        return 0;
+    }
+
+    public int getTotalSeats() {
+        return 0;
+    }
 }
 
 class PriceInfo {
@@ -142,13 +148,26 @@ class PriceInfo {
     private double centreSeatPrice;
     private double rightSeatPrice;
 
-    public PriceInfo(double leftSeatPrice, double centreSeatPrice, double rightSeatPrice) {
-        this.leftSeatPrice = leftSeatPrice;
-        this.centreSeatPrice = centreSeatPrice;
-        this.rightSeatPrice = rightSeatPrice;
+    public PriceInfo(double left, double centre, double right) {
+        this.leftSeatPrice = left;
+        this.centreSeatPrice = centre;
+        this.rightSeatPrice = right;
+    }
+
+    public double getLeftSeatPrice() {
+        return leftSeatPrice;
+    }
+
+    public double getCentreSeatPrice() {
+        return centreSeatPrice;
+    }
+
+    public double getRightSeatPrice() {
+        return rightSeatPrice;
     }
 
     public String formatForCsv() {
-        return String.format("STANDING:%.2f:%.2f:%.2f", leftSeatPrice, centreSeatPrice, rightSeatPrice);
+        return String.format("%.2f:%.2f:%.2f", leftSeatPrice, centreSeatPrice, rightSeatPrice);
     }
 }
+

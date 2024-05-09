@@ -2,12 +2,12 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomerManager implements DataManager<Customer> {
+public class CustomerManager implements DataManager<List<Customer>> {
     private List<Customer> customers = new ArrayList<>();
 
     @Override
-    public void loadData(String filePath) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    public void loadData(String customerFilePath) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(customerFilePath));
         String line;
         while ((line = reader.readLine()) != null) {
             String[] data = line.split(",");
@@ -15,32 +15,20 @@ public class CustomerManager implements DataManager<Customer> {
                 int id = Integer.parseInt(data[0].trim());
                 String name = data[1].trim();
                 String password = data[2].trim();
-                Customer customer = new Customer(id, name, password);
-                customers.add(customer);
-               // System.out.println("Loaded customer: ID=" + id + ", Name=" + name);
+                customers.add(new Customer(id, name, password));
             } else {
-               // System.out.println("Invalid customer data line. Skipping: " + line);
+                System.out.println("Invalid customer data line. Skipping: " + line);
             }
         }
         reader.close();
     }
 
     @Override
-    public void saveData(String customerFilePath) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(customerFilePath));
-        for (Customer customer : customers) {
-            writer.write(customer.getId() + "," + customer.getName() + "," + customer.getPassword() + "\n");
-        }
-        writer.close();
-    }
-
-    @Override
     public List<Customer> getAllRecords() {
         return new ArrayList<>(customers);
     }
-
-
 }
+
 
 class Customer {
     private int id;

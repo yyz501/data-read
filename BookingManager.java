@@ -1,29 +1,35 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class BookingManager implements DataManager<Booking> {
+public class BookingManager implements DataManager<ArrayList<Booking>> {
     private List<Booking> bookings = new ArrayList<>();
 
     @Override
-    public void loadData(String filePath) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    public void loadData(String bookingFilePath) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(bookingFilePath));
         String line;
+        bookings.clear();  // Clear existing bookings before loading new ones
         while ((line = reader.readLine()) != null) {
             try {
                 Booking booking = parseBooking(line);
                 if (booking != null) {
                     bookings.add(booking);
+                    System.out.println("Loaded booking: " + booking);
                 }
             } catch (Exception e) {
                 System.out.println("Skipping invalid booking data line: " + line);
             }
         }
         reader.close();
+        System.out.println("All bookings successfully loaded from " + bookingFilePath);
     }
 
+    public void addBooking(Booking newBooking) {
+        bookings.add(newBooking);
+    }
     private Booking parseBooking(String line) {
         String[] parts = line.split(",");
+        if (parts.length < 10) return null; // Basic validation
         int index = 0;
         int bookingId = Integer.parseInt(parts[index++].trim());
         int customerId = Integer.parseInt(parts[index++].trim());
@@ -43,9 +49,8 @@ public class BookingManager implements DataManager<Booking> {
         return new Booking(bookingId, customerId, customerName, concertId, tickets);
     }
 
-    @Override
-    public void saveData(String filePath) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+    public void saveData(String bookingFilePath) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(bookingFilePath, true)); // 确保以追加模式写入
         for (Booking booking : bookings) {
             StringBuilder builder = new StringBuilder();
             builder.append(booking.getBookingId()).append(",");
@@ -64,13 +69,31 @@ public class BookingManager implements DataManager<Booking> {
             writer.newLine();
         }
         writer.close();
-    }
-    @Override
-    public List<Booking> getAllRecords() {
-        return new ArrayList<>(bookings); // 返回预订列表的一个副本
+        System.out.println("Bookings saved to " + bookingFilePath);
     }
 
+
+    @Override
+    public ArrayList<Booking> getAllRecords() {
+        ArrayList<Booking> bookings1 = new ArrayList<>(bookings);
+        return bookings1; // 返回预订列表的一个副本
+    }
+    public Map<String, Set<String>> getBookedSeatsByConcertId(int concertId) {
+        Map<String, Set<String>> bookedSeatsMap = new HashMap<>();
+        for (Booking booking : bookings) {
+            if (booking.getConcertId() == concertId) {
+                for (Ticket ticket : booking.getTickets()) {
+                    String seatLabel = String.valueOf(ticket.getSeatNumber()); // 使用座位号
+                    bookedSeatsMap.computeIfAbsent(ticket.getZoneType(), k -> new HashSet<>()).add(seatLabel);
+                }
+            }
+        }
+        return bookedSeatsMap;
+    }
+
+
 }
+
 class Booking {
     private int bookingId;
     private int customerId;
@@ -127,43 +150,22 @@ class Ticket {
         return ticketId;
     }
 
-    public void setTicketId(int ticketId) {
-        this.ticketId = ticketId;
-    }
-
     public int getRowNumber() {
         return rowNumber;
-    }
-
-    public void setRowNumber(int rowNumber) {
-        this.rowNumber = rowNumber;
     }
 
     public int getSeatNumber() {
         return seatNumber;
     }
 
-    public void setSeatNumber(int seatNumber) {
-        this.seatNumber = seatNumber;
-    }
-
     public String getZoneType() {
         return zoneType;
-    }
-
-    public void setZoneType(String zoneType) {
-        this.zoneType = zoneType;
     }
 
     public double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    // Getters and setters are omitted for brevity
 }
 
 
