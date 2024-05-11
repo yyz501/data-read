@@ -3,33 +3,37 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+
 public class VenueManager implements DataManager<Map<String, Map<String, List<String>>>> {
     private Map<String, Map<String, List<String>>> venueLayouts = new HashMap<>(); // 主Map存储不同场馆的数据
 
-    @Override
+    public Map<String, List<String>> getVenueLayout(String venueName) throws IOException {
+        return venueLayouts.get(venueName.toLowerCase());
+    }
     public void loadData(String venueFilePath) throws IOException {
+
         BufferedReader reader = new BufferedReader(new FileReader(venueFilePath));
         String line;
         Map<String, List<String>> currentLayout = new LinkedHashMap<>();
         String venueName = extractVenueName(venueFilePath);
 
         while ((line = reader.readLine()) != null) {
-            String[] parts = line.split(" ");
-            if (parts.length < 3) continue;
+            String[] parts = line.split("\\s+", 2);
+            if (parts.length < 2) continue;  // Skip malformed lines
 
             String sectionId = parts[0];
             List<String> seats = new ArrayList<>();
-            for (int i = 1; i < parts.length - 1; i++) {
-                String seatGroup = parts[i].replaceAll("\\[|\\]", "");
-                seats.addAll(Arrays.asList(seatGroup.split("")));
+            // Process remaining part as a whole, preserving spaces
+            String[] groups = parts[1].split("(?<=\\])(\\s+)(?=\\[)");
+            for (String group : groups) {
+                seats.add(group.replaceAll("\\[|\\]", ""));
             }
             currentLayout.put(sectionId, seats);
-            System.out.println("Loaded seats for section " + sectionId + ": " + seats);
         }
         reader.close();
         venueLayouts.put(venueName, currentLayout);
-        System.out.println("Loaded layout for " + venueName + ": " + currentLayout);
     }
+
     @Override
     public Map<String, Map<String, List<String>>> getAllRecords() {
         return new HashMap<>(venueLayouts); // 返回整个场馆数据的副本

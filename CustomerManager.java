@@ -4,6 +4,7 @@ import java.util.List;
 
 public class CustomerManager implements DataManager<List<Customer>> {
     private List<Customer> customers = new ArrayList<>();
+    private Customer currentCustomer;
 
     @Override
     public void loadData(String customerFilePath) throws IOException {
@@ -16,8 +17,6 @@ public class CustomerManager implements DataManager<List<Customer>> {
                 String name = data[1].trim();
                 String password = data[2].trim();
                 customers.add(new Customer(id, name, password));
-            } else {
-                System.out.println("Invalid customer data line. Skipping: " + line);
             }
         }
         reader.close();
@@ -27,8 +26,22 @@ public class CustomerManager implements DataManager<List<Customer>> {
     public List<Customer> getAllRecords() {
         return new ArrayList<>(customers);
     }
-}
 
+    public void setCurrentCustomer(int customerId) {
+        this.currentCustomer = customers.stream()
+                .filter(customer -> customer.getId() == customerId)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public int getCurrentCustomerId() {
+        return currentCustomer != null ? currentCustomer.getId() : -1;
+    }
+
+    public String getCurrentCustomerName() {
+        return currentCustomer != null ? currentCustomer.getName() : "Unknown";
+    }
+}
 
 class Customer {
     private int id;
@@ -45,23 +58,11 @@ class Customer {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

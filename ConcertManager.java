@@ -6,7 +6,13 @@ import java.util.Map;
 
 public class ConcertManager implements DataManager<List<Concert>> {
     private Map<Integer, Concert> concerts = new HashMap<>();
+    private BookingManager bookingManager;
+    private VenueManager venueManager;
 
+    public ConcertManager(BookingManager bookingManager, VenueManager venueManager) {
+        this.bookingManager = bookingManager;
+        this.venueManager = venueManager;
+    }
     @Override
     public void loadData(String concertFilePath) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(concertFilePath));
@@ -26,7 +32,7 @@ public class ConcertManager implements DataManager<List<Concert>> {
                 PriceInfo standing = parsePriceInfo(data[5].trim());
                 PriceInfo seating = parsePriceInfo(data[6].trim());
                 PriceInfo vip = parsePriceInfo(data[7].trim());
-                concerts.put(concertId, new Concert(concertId, date, timing, artistName, venueName, standing, seating, vip));
+                concerts.put(concertId, new Concert(concertId, date, artistName,timing, venueName, standing, seating, vip,this.bookingManager, this.venueManager));
             } catch (NumberFormatException e) {
                 System.out.println("Error parsing line: " + line + "; Error: " + e.getMessage());
             }
@@ -39,108 +45,11 @@ public class ConcertManager implements DataManager<List<Concert>> {
         return new PriceInfo(Double.parseDouble(parts[1]), Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
     }
 
-
     @Override
     public List<Concert> getAllRecords() {
         return new ArrayList<>(concerts.values());
     }
-}
-
-class Concert {
-    private int id;
-    private String date;
-    private String timing;
-    private String artistName;
-    private String venueName;
-    private PriceInfo standing;
-    private PriceInfo seating;
-    private PriceInfo vip;
-
-    public Concert(int id, String date, String timing, String artistName, String venueName, PriceInfo standing, PriceInfo seating, PriceInfo vip) {
-        this.id = id;
-        this.date = date;
-        this.timing = timing;
-        this.artistName = artistName;
-        this.venueName = venueName;
-        this.standing = standing;
-        this.seating = seating;
-        this.vip = vip;
-    }
-
-    // Getters for fields are omitted for brevity
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public String getTiming() {
-        return timing;
-    }
-
-    public void setTiming(String timing) {
-        this.timing = timing;
-    }
-
-    public String getArtistName() {
-        return artistName;
-    }
-
-    public void setArtistName(String artistName) {
-        this.artistName = artistName;
-    }
-
-    public String getVenueName() {
-        return venueName;
-    }
-
-    public void setVenueName(String venueName) {
-        this.venueName = venueName;
-    }
-
-    public PriceInfo getStanding() {
-        return standing;
-    }
-
-    public void setStanding(PriceInfo standing) {
-        this.standing = standing;
-    }
-
-    public PriceInfo getSeating() {
-        return seating;
-    }
-
-    public void setSeating(PriceInfo seating) {
-        this.seating = seating;
-    }
-
-    public PriceInfo getVip() {
-        return vip;
-    }
-
-    public void setVip(PriceInfo vip) {
-        this.vip = vip;
-    }
-
-    public int getBookedSeats() {
-
-        return 0;
-    }
-
-    public int getTotalSeats() {
-        return 0;
-    }
+    // Method to get a customer by ID
 }
 
 class PriceInfo {
@@ -168,6 +77,15 @@ class PriceInfo {
 
     public String formatForCsv() {
         return String.format("%.2f:%.2f:%.2f", leftSeatPrice, centreSeatPrice, rightSeatPrice);
+    }
+
+    public void setLeftSeatPrice(double leftPrice) {
+    }
+
+    public void setCentreSeatPrice(double centerPrice) {
+    }
+
+    public void setRightSeatPrice(double rightPrice) {
     }
 }
 

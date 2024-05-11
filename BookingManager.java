@@ -14,14 +14,14 @@ public class BookingManager implements DataManager<ArrayList<Booking>> {
                 Booking booking = parseBooking(line);
                 if (booking != null) {
                     bookings.add(booking);
-                    System.out.println("Loaded booking: " + booking);
+                    //System.out.println("Loaded booking: " + booking);
                 }
             } catch (Exception e) {
                 System.out.println("Skipping invalid booking data line: " + line);
             }
         }
         reader.close();
-        System.out.println("All bookings successfully loaded from " + bookingFilePath);
+        //  System.out.println("All bookings successfully loaded from " + bookingFilePath);
     }
 
     public void addBooking(Booking newBooking) {
@@ -72,7 +72,6 @@ public class BookingManager implements DataManager<ArrayList<Booking>> {
         System.out.println("Bookings saved to " + bookingFilePath);
     }
 
-
     @Override
     public ArrayList<Booking> getAllRecords() {
         ArrayList<Booking> bookings1 = new ArrayList<>(bookings);
@@ -90,7 +89,27 @@ public class BookingManager implements DataManager<ArrayList<Booking>> {
         }
         return bookedSeatsMap;
     }
+    public List<Booking> getBookingsByConcertId(int concertId) {
+        List<Booking> filteredBookings = new ArrayList<>();
+        for (Booking booking : bookings) {
+            if (booking.getConcertId() == concertId) {
+                filteredBookings.add(booking);
+            }
+        }
+        return filteredBookings;
+    }
 
+    public int generateNewBookingId() {
+        return getAllRecords().stream().mapToInt(Booking::getBookingId).max().orElse(0) + 1;
+    }
+
+    public int generateNewTicketId() {
+        return getAllRecords().stream()
+                .flatMap(booking -> booking.getTickets().stream())
+                .mapToInt(Ticket::getTicketId)
+                .max()
+                .orElse(0) + 1;
+    }
 
 }
 
@@ -167,6 +186,3 @@ class Ticket {
     }
 
 }
-
-
-
